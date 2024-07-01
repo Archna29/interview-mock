@@ -11,16 +11,54 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-  
+import { chatSession } from '@/utils/GeminiAIModal';
+import { LoaderCircleIcon } from 'lucide-react';
+import { MockInterview } from '@/utils/schema';
+import { db } from '@/utils/db';
+import { v4 as uuidv4 } from 'uuid';
+import { useUser } from '@clerk/nextjs';
+import moment from 'moment';
 function AddNewInterview() {
     const [open,setOpen]=useState(false);
     const[jobPosition,setJobPosition]=useState("");
     const[jobDesc,setJobDesc]=useState("");
-    const[experience,setExperience]=useState("");
-    const onSubmit=(e)=>{
+    const[ jobExperience,setJobExperience]=useState("");
+    const [loading ,setLoading]=useState(false);
+    const [jsonResponse,setJsonResponse]=useState([]);
+    const {user}=useUser();
+    const onSubmit=async(e)=>{
+      setLoading(true);
 e.preventDefault();
-console.log(jobPosition,jobDesc,experience);
-    }
+console.log(jobPosition,jobDesc,jobExperience);
+const InputPrompt="job position:" +jobPosition+ " job description:" +jobDesc + "job experience:" +jobExperience+" give me 5 interview question and answer in json format , give question and answer as field in json";
+
+const result =await chatSession.sendMessage(InputPrompt);
+const MockJsonResp=(result.response.text()).replace('```json','').replace('```','');
+console.log(JSON.parse(MockJsonResp));
+setJsonResponse(MockJsonResp);
+if(MockJsonResp){
+  const resp=await db.insert(MockInterview)
+  .values({
+    mockId:uuidv4(),
+    jsonMockResp:MockJsonResp,
+    jobPosition:jobPosition,
+    jobDesc:jobDesc,
+    jobExperience:jobExperience,
+    createdBy:user?.primaryEmailAddress?.emailAddress,
+    createdAt:moment().format('DD-MM-yyyy')
+  }).returning({mockId:MockInterview.mockId});
+  console.log("Inserted ID: " ,resp)
+  if(resp){
+    setOpen(false);
+  }
+}
+
+  else{
+    console.log("Error");
+  }
+
+setLoading(false);
+}
   return (
     <div>
         <div className='p-10 border rounded-lg bg-neutral-100 hover: scale-105 hover:shadow-md cursor-pointer transition-all' onClick={()=> setOpen(true)}>
@@ -51,12 +89,19 @@ console.log(jobPosition,jobDesc,experience);
 <div className='my-5'>
     <label className='font-bold text-gray-500'>Years of Experience</label>
     <Input className="my-3"  type="number"  max="20"
-     onChange={(event)=>setExperience(event.target.value)} placeholder= " Ex: 1"/>
+     onChange={(event)=>setJobExperience(event.target.value)} placeholder= " Ex: 1"/>
 </div>
        </div>
         <div className='m-5 flex gap-5 justify-end '>
         <Button type="button" variant="ghost" onClick={()=>setOpen(false)}>Cancel</Button>
-        <Button  type="submit"className="bg-indigo-700"> Start Interview</Button>
+        <Button  type="submit"className="bg-indigo-700" disabled={loading}> 
+          {loading? 
+          <>
+            <LoaderCircleIcon className='animate-spin'/>
+            "Generating Question"
+          </> :"Start Interview"
+            }
+       </Button>
         </div>
   
         </form>
