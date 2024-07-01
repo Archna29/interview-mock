@@ -5,7 +5,10 @@ function DashboardLayout({children}) {
   return (
     <div>
       <Header/>
+      <div className='m-7 md:mx-20 lg:mx-36'>
       {children}
+      </div>
+   
     </div>
   )
 }
