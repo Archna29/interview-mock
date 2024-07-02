@@ -16,15 +16,18 @@ import { LoaderCircleIcon } from 'lucide-react';
 import { MockInterview } from '@/utils/schema';
 import { db } from '@/utils/db';
 import { v4 as uuidv4 } from 'uuid';
+
 import { useUser } from '@clerk/nextjs';
 import moment from 'moment';
+import { useRouter } from 'next/navigation';
 function AddNewInterview() {
     const [open,setOpen]=useState(false);
-    const[jobPosition,setJobPosition]=useState("");
-    const[jobDesc,setJobDesc]=useState("");
-    const[ jobExperience,setJobExperience]=useState("");
+    const[jobPosition,setJobPosition]=useState();
+    const[jobDesc,setJobDesc]=useState();
+    const[ jobExperience,setJobExperience]=useState();
     const [loading ,setLoading]=useState(false);
     const [jsonResponse,setJsonResponse]=useState([]);
+    const router = useRouter();
     const {user}=useUser();
     const onSubmit=async(e)=>{
       setLoading(true);
@@ -36,20 +39,23 @@ const result =await chatSession.sendMessage(InputPrompt);
 const MockJsonResp=(result.response.text()).replace('```json','').replace('```','');
 console.log(JSON.parse(MockJsonResp));
 setJsonResponse(MockJsonResp);
+
 if(MockJsonResp){
   const resp=await db.insert(MockInterview)
   .values({
     mockId:uuidv4(),
     jsonMockResp:MockJsonResp,
-    jobPosition:jobPosition,
+    jobPosition:jobPosition,   
     jobDesc:jobDesc,
     jobExperience:jobExperience,
     createdBy:user?.primaryEmailAddress?.emailAddress,
     createdAt:moment().format('DD-MM-yyyy')
   }).returning({mockId:MockInterview.mockId});
   console.log("Inserted ID: " ,resp)
+ 
   if(resp){
     setOpen(false);
+    router.push('/dashboard/interview/'+resp[0]?.mockId)
   }
 }
 
