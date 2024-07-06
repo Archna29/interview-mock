@@ -12,7 +12,7 @@ function Header() {
 console.log(path);
     },[])
   return (
-    <div className=' flex p-4 item-center justify-between bg-black max-w-screen-xl mx-auto'>
+    <div className=' flex p-4 item-center justify-between bg-black max-w-screen-xxl mx-auto'>
         <Image src={'/logo.svg'} width={40} height={20} alt="logo"/>       
         <ul className=' sm: flex flex-col md:flex-row gap-8  text-white  leading-10 cursor-pointer'>
             <li className={`hover:text-blue-500 font-bold transition-all
