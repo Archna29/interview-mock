@@ -5,6 +5,7 @@ import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import Webcam from 'react-webcam'
 import { Mic } from 'lucide-react';
+// import { toast } from '@/components/ui/use-toast';
 
 function RecordAnswerSection() {
   const [userAnswer, setUserAnswer]=useState('');
@@ -25,6 +26,21 @@ useEffect(()=>{
     setUserAnswer(prevAns=>prevAns+results?.transcript)
   ))
 },[results])
+
+const SaveUserAnswer=()=>{
+  if(isRecording){
+    stopSpeechToText();
+    if(userAnswer?.length<10){
+    //  toast('error while saving answer please record again');
+return ;
+    }
+  }
+  else{
+    startSpeechToText();
+  }
+}
+
+
   return (
     <div className='flex justify-center items-center flex-col'>
    <div className='flex flex-col mt-20 justify-center items-center  bg-black rounded-lg  p-5'>
@@ -39,7 +55,7 @@ useEffect(()=>{
          /> 
     </div>
     <Button variant="outline" className="my-10"
-    onClick={isRecording?stopSpeechToText:startSpeechToText}
+    onClick={SaveUserAnswer}
     >
       
       {isRecording?
